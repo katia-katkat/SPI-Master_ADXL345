@@ -35,75 +35,75 @@ begin
 -- r e g i s t e r s
 process( clk , reset )
 begin
-if reset = '1' then
-state_reg <= idle ;
-si_reg <= (others => '0');
-so_reg <= (others => '0');
-n_reg <= (others => '0');
-c_reg <= (others => '0');
-busy_reg <= '0';
+	if reset = '1' then
+	state_reg <= idle ;
+	si_reg <= (others => '0');
+	so_reg <= (others => '0');
+	n_reg <= (others => '0');
+	c_reg <= (others => '0');
+	busy_reg <= '0';
 
-spi_clk_reg <= '0';
-elsif ( clk ' event and clk = '1') then
-state_reg <= state_next ;
-si_reg <= si_next ;
-so_reg <= so_next ;
-n_reg <= n_next ;
-c_reg <= c_next ;
-busy_reg <= busy_next ;
-spi_clk_reg <= spi_clk_next ;
-end if ;
+	spi_clk_reg <= '0';
+	elsif ( clk ' event and clk = '1') then
+	state_reg <= state_next ;
+	si_reg <= si_next ;
+	so_reg <= so_next ;
+	n_reg <= n_next ;
+	c_reg <= c_next ;
+	busy_reg <= busy_next ;
+	spi_clk_reg <= spi_clk_next ;
+	end if ;
 end process;
--- next s t a t e l o g i c and d a t a p a th
+	-- next s t a t e l o g i c and d a t a p a th
 process( state_reg , si_reg ,busy_reg ,busy_next , so_reg , n_reg , c_reg , din , dvsr , start , cpha , miso )
 begin
-state_next <= state_reg ;
-si_next <= si_reg ;
-so_next <= so_reg ;
-n_next <= n_reg ;
-c_next <= c_reg ;
-busy_next <= busy_reg ;
+	state_next <= state_reg ;
+	si_next <= si_reg ;
+	so_next <= so_reg ;
+	n_next <= n_reg ;
+	c_next <= c_reg ;
+	busy_next <= busy_reg ;
 
-case state_reg is 
-    when idle => 
+	case state_reg is 
+	    when idle => 
 
-        if start = '1' then 
-				busy_next <= '1';
-				cs <= '0';
-            so_next <= din; 
-            state_next <= p0;
-			else 
-				cs <= '0';
-            state_next <= idle ;
-        end if;
-		  
-    when p0 =>
-		  cs <= '0';
-        if c_reg = unsigned ( dvsr ) then -- sclk 0-to -1
-            state_next <= p1 ;
-            si_next <= si_reg (6 downto 0) & miso ;
-            c_next <= (others => '0');
-        else 
-            c_next <= c_reg + 1; 
-        end if ;
-    when p1 => 
-        if c_reg = unsigned ( dvsr ) then --sclk 1 to 0
-            if n_reg = 7 then 
-					 n_next <= (others => '0');
-					 busy_next <= '0';
-                state_next <= idle ; 
-					 cs <= '1';
-            else 
-                so_next <= so_reg (6 downto 0) & '0';
-                state_next <= p0 ;
-                n_next <= n_reg + 1;
-                c_next <= (others => '0');
-					 cs <= '0';
-            end if;
-        else 
-            c_next <= c_reg + 1;
-        end if;
-    end case;
+		if start = '1' then 
+					busy_next <= '1';
+					cs <= '0';
+		    so_next <= din; 
+		    state_next <= p0;
+				else 
+					cs <= '0';
+		    state_next <= idle ;
+		end if;
+
+	    when p0 =>
+			  cs <= '0';
+		if c_reg = unsigned ( dvsr ) then -- sclk 0-to -1
+		    state_next <= p1 ;
+		    si_next <= si_reg (6 downto 0) & miso ;
+		    c_next <= (others => '0');
+		else 
+		    c_next <= c_reg + 1; 
+		end if ;
+	    when p1 => 
+		if c_reg = unsigned ( dvsr ) then --sclk 1 to 0
+		    if n_reg = 7 then 
+						 n_next <= (others => '0');
+						 busy_next <= '0';
+			state_next <= idle ; 
+						 cs <= '1';
+		    else 
+			so_next <= so_reg (6 downto 0) & '0';
+			state_next <= p0 ;
+			n_next <= n_reg + 1;
+			c_next <= (others => '0');
+						 cs <= '0';
+		    end if;
+		else 
+		    c_next <= c_reg + 1;
+		end if;
+	    end case;
 end process;
 
 
